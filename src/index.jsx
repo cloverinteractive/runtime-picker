@@ -1,9 +1,11 @@
+// @flow
+
 import React from 'react';
 import { OverlayTrigger, Popover } from 'react-bootstrap';
 import ScopedField from './ScopedField';
 
-const LEDGE = 0; // min value accepted as unit
-const REDGE = 59; // max value accepted as unit
+const LEDGE: number = 0; // min value accepted as unit
+const REDGE: number = 59; // max value accepted as unit
 
 const FROM_HOURS = 3600; // hours to second multiplier
 const FROM_MINUTES = 60; // minute to second multiplier
@@ -15,7 +17,20 @@ const MAX_CODE = 57; // max code for numbers
 const backspaceExpresion = /.$/; // Removes the last character
 const clearPadExpression = /^(0+)/; // Removes the zero padding
 
-export default class RuntimePicker extends React.PureComponent {
+type Props = {
+  name: string,
+  skipSeconds: boolean,
+  title: string,
+  value: number,
+};
+
+type State = {
+  hours: string,
+  minutes: string,
+  seconds: string,
+};
+
+export default class RuntimePicker extends React.PureComponent<Props, State> {
   static defaultProps = {
     name: 'runtime',
     skipSeconds: false,
@@ -52,7 +67,7 @@ export default class RuntimePicker extends React.PureComponent {
     this.setState({
       hours: `${hours}`.padStart(3, '0'),
       minutes: `${minutes}`.padStart(2, '0'),
-      seconds: `${seconds}`.padStart(2, 0),
+      seconds: `${seconds}`.padStart(2, '0'),
     });
   };
 
@@ -65,13 +80,13 @@ export default class RuntimePicker extends React.PureComponent {
     return `${hours}:${minutes}${tail}`;
   };
 
-  chainOrTrim = (current, key, isBackspace) => {
+  chainOrTrim = (current: string, key: string, isBackspace: boolean): string => {
     if (isBackspace) return current.replace(backspaceExpresion, '');
     return `${current}${key}`;
   };
 
   // Handles component update based on control clicks
-  handleChange = ({ currentTarget }) => {
+  handleChange = ({ currentTarget }: SyntheticEvent<HTMLInputElement>) => {
     const { name, value } = currentTarget;
     const isScoped = currentTarget.getAttribute('data-unscoped');
     const padLength = isScoped ? 3 : 2;
@@ -89,7 +104,7 @@ export default class RuntimePicker extends React.PureComponent {
   };
 
   // handles and sanitizes key presses
-  handleKeyboard = (event) => {
+  handleKeyboard = (event: SyntheticKeyboardEvent<HTMLInputElement>) => {
     event.persist();
     const { key, keyCode, currentTarget } = event;
     const isNumber = keyCode >= MIN_CODE && keyCode <= MAX_CODE;

@@ -10,7 +10,7 @@ flow-typed
 decls
 
 [lints]
-sketch-null=warn
+sketchy-null=warn
 
 [options]
 module.system.node.resolve_dirname=node_modules

@@ -1,4 +1,18 @@
+// @flow
+
 import React from 'react';
+
+type Props = {
+  exclude: boolean,
+  handleChange: Function,
+  handleKeyboard: Function,
+  name: string,
+  value: string,
+};
+
+const defaultProps = {
+  exclude: false,
+};
 
 const ScopedField = ({
   exclude,
@@ -6,7 +20,7 @@ const ScopedField = ({
   handleKeyboard,
   name,
   value,
-}) => {
+}: Props) => {
   if (exclude) return null;
 
   return (
@@ -26,5 +40,7 @@ const ScopedField = ({
     </React.Fragment>
   );
 };
+
+ScopedField.defaultProps = defaultProps;
 
 export default ScopedField;
