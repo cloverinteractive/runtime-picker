@@ -36,6 +36,10 @@ type State = {
 
 const NOOP = f => f;
 
+const boundedWidth = {
+  ...inputStyle,
+  maxWidth: '4em',
+};
 
 export default class RuntimePicker extends React.PureComponent<Props, State> {
   static defaultProps = {
@@ -161,13 +165,12 @@ export default class RuntimePicker extends React.PureComponent<Props, State> {
           autoFocus
           data-unscoped
           dir="rtl"
-          max={999}
           min={0}
           name="hours"
           onChange={this.handleChange}
           onKeyDown={this.handleKeyboard}
           step={1}
-          style={inputStyle}
+          style={boundedWidth}
           type="number"
           value={hours}
         />
