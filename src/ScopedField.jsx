@@ -1,6 +1,7 @@
 // @flow
 
 import React from 'react';
+import inputStyle from './dont-blink';
 
 type Props = {
   exclude: boolean,
@@ -34,6 +35,7 @@ const ScopedField = ({
         onChange={handleChange}
         onKeyDown={handleKeyboard}
         step={1}
+        style={inputStyle}
         type="number"
         value={value}
       />

@@ -1,8 +1,9 @@
 // @flow
-
+/* eslint-disable jsx-a11y/no-autofocus */
 import React from 'react';
 import { OverlayTrigger, Popover } from 'react-bootstrap';
 import ScopedField from './ScopedField';
+import inputStyle from './dont-blink';
 
 const LEDGE = 0; // min value accepted as unit
 const REDGE = 59; // max value accepted as unit
@@ -18,8 +19,10 @@ const backspaceExpresion = /.$/; // Removes the last character
 const clearPadExpression = /^(0+)/; // Removes the zero padding
 
 type Props = {
-  handleChange: Function,
+  disabled: boolean,
   name: string,
+  onChange: Function,
+  placement: 'bottom' | 'left' | 'right' | 'top',
   skipSeconds: boolean,
   title: string,
   value: number,
@@ -31,9 +34,14 @@ type State = {
   seconds: string,
 };
 
+const NOOP = f => f;
+
+
 export default class RuntimePicker extends React.PureComponent<Props, State> {
   static defaultProps = {
+    disabled: false,
     name: 'runtime',
+    placement: 'top',
     skipSeconds: false,
     title: 'Pick your Runtime',
     value: 0,
@@ -50,13 +58,13 @@ export default class RuntimePicker extends React.PureComponent<Props, State> {
   }
 
   componentDidUpdate(_prevProps: Props, prevState: State) {
-    const { handleChange } = this.props;
+    const { onChange } = this.props;
 
-    if (typeof handleChange === 'function') {
+    if (typeof onChange === 'function') {
       const { hours: h, minutes: m, seconds: s } = this.state;
       const { hours: oH, minutes: oM, seconds: oS } = prevState;
 
-      if (h !== oH || m !== oM || s !== oS) handleChange(this.toSeconds());
+      if (h !== oH || m !== oM || s !== oS) onChange(this.toSeconds());
     }
   }
 
@@ -150,6 +158,7 @@ export default class RuntimePicker extends React.PureComponent<Props, State> {
     return (
       <Popover id="runtime-picker-top" title={title}>
         <input
+          autoFocus
           data-unscoped
           dir="rtl"
           max={999}
@@ -158,6 +167,7 @@ export default class RuntimePicker extends React.PureComponent<Props, State> {
           onChange={this.handleChange}
           onKeyDown={this.handleKeyboard}
           step={1}
+          style={inputStyle}
           type="number"
           value={hours}
         />
@@ -178,21 +188,44 @@ export default class RuntimePicker extends React.PureComponent<Props, State> {
     );
   };
 
-  render() {
+  renderDisabled = () => {
     const { name } = this.props;
 
     return (
-      <OverlayTrigger
-        trigger="click"
-        overlay={this.renderPicker()}
-        placement="top"
-        rootClose
-      >
-        <label htmlFor={name}>
-          {this.runtimeDisplay()}
-          <input id={name} name={name} type="hidden" value={this.toSeconds()} />
-        </label>
-      </OverlayTrigger>
+      <div className="disabled-runtimePicker">
+        <input id={name} name={name} type="hidden" value={this.toSeconds()} />
+        <input
+          disabled
+          className="form-control"
+          type="text"
+          value={this.runtimeDisplay()}
+        />
+      </div>
+    );
+  };
+
+  render() {
+    const { disabled, name, placement } = this.props;
+
+    if (disabled) return this.renderDisabled();
+
+    return (
+      <div className="runtimePicker">
+        <input id={name} name={name} type="hidden" value={this.toSeconds()} />
+        <OverlayTrigger
+          trigger="click"
+          overlay={this.renderPicker()}
+          placement={placement}
+          rootClose
+        >
+          <input
+            className="form-control"
+            type="text"
+            onChange={NOOP}
+            value={this.runtimeDisplay()}
+          />
+        </OverlayTrigger>
+      </div>
     );
   }
 }
