@@ -4,7 +4,7 @@
   "description": "Pick a runtime like you would microwave popcorn",
   "main": "build/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "yarn lint && yarn flow",
     "lint": "yarn eslint --ext .js --ext .jsx ./src",
     "start": "webpack --watch",
     "build": "webpack"
@@ -53,5 +53,10 @@
   "dependencies": {
     "add": "^2.0.6",
     "global": "^4.3.2"
+  },
+  "engines": {
+    "node": "10.1.0",
+    "npm": "6.0.1",
+    "yarn": "1.6.0"
   }
 }
