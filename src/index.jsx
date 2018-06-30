@@ -4,8 +4,8 @@ import React from 'react';
 import { OverlayTrigger, Popover } from 'react-bootstrap';
 import ScopedField from './ScopedField';
 
-const LEDGE: number = 0; // min value accepted as unit
-const REDGE: number = 59; // max value accepted as unit
+const LEDGE = 0; // min value accepted as unit
+const REDGE = 59; // max value accepted as unit
 
 const FROM_HOURS = 3600; // hours to second multiplier
 const FROM_MINUTES = 60; // minute to second multiplier
@@ -18,6 +18,7 @@ const backspaceExpresion = /.$/; // Removes the last character
 const clearPadExpression = /^(0+)/; // Removes the zero padding
 
 type Props = {
+  handleChange: Function,
   name: string,
   skipSeconds: boolean,
   title: string,
@@ -46,6 +47,17 @@ export default class RuntimePicker extends React.PureComponent<Props, State> {
 
   componentDidMount() {
     this.fromSeconds();
+  }
+
+  componentDidUpdate(_prevProps: Props, prevState: State) {
+    const { handleChange } = this.props;
+
+    if (typeof handleChange === 'function') {
+      const { hours: h, minutes: m, seconds: s } = this.state;
+      const { hours: oH, minutes: oM, seconds: oS } = prevState;
+
+      if (h !== oH || m !== oM || s !== oS) handleChange(this.toSeconds());
+    }
   }
 
   toSeconds = () => {
@@ -88,14 +100,14 @@ export default class RuntimePicker extends React.PureComponent<Props, State> {
   // Handles component update based on control clicks
   handleChange = ({ currentTarget }: SyntheticEvent<HTMLInputElement>) => {
     const { name, value } = currentTarget;
-    const isScoped = currentTarget.getAttribute('data-unscoped');
-    const padLength = isScoped ? 3 : 2;
+    const isUnscoped = currentTarget.getAttribute('data-unscoped');
+    const padLength = isUnscoped ? 3 : 2;
 
     this.setState(() => {
       const asInt = parseInt(value, 10);
 
       if (Number.isNaN(asInt)) return null;
-      if (asInt < LEDGE || (!isScoped && asInt > REDGE)) return null;
+      if (asInt < LEDGE || (!isUnscoped && asInt > REDGE)) return null;
 
       return {
         [name]: value.padStart(padLength, '0'),
@@ -113,8 +125,8 @@ export default class RuntimePicker extends React.PureComponent<Props, State> {
     if (!isNumber && !isBackspace) return false;
 
     const { name, value } = currentTarget;
-    const isScoped = currentTarget.getAttribute('data-unscoped');
-    const padLength = isScoped ? 3 : 2;
+    const isUnscoped = currentTarget.getAttribute('data-unscoped');
+    const padLength = isUnscoped ? 3 : 2;
 
     const relevantPart = this.chainOrTrim(value, key, isBackspace)
       .replace(clearPadExpression, '');
@@ -122,7 +134,7 @@ export default class RuntimePicker extends React.PureComponent<Props, State> {
     const asInt = parseInt(relevantPart, 10);
 
     if (Number.isNaN(asInt)) return false;
-    if (asInt < LEDGE || (!isScoped && asInt > REDGE)) return false;
+    if (asInt < LEDGE || (!isUnscoped && asInt > REDGE)) return false;
 
     event.preventDefault();
 
