@@ -1,6 +1,6 @@
 import React from 'react';
-import { OverlayTrigger, Popover } from "react-bootstrap";
-import ScopedField from './ScopedField.jsx';
+import { OverlayTrigger, Popover } from 'react-bootstrap';
+import ScopedField from './ScopedField';
 
 const LEDGE = 0; // min value accepted as unit
 const REDGE = 59; // max value accepted as unit
@@ -17,16 +17,16 @@ const clearPadExpression = /^(0+)/; // Removes the zero padding
 
 export default class RuntimePicker extends React.PureComponent {
   static defaultProps = {
-    name: "runtime",
+    name: 'runtime',
     skipSeconds: false,
-    title: "Pick your Runtime",
-    value: 0
+    title: 'Pick your Runtime',
+    value: 0,
   };
 
   state = {
-    hours: "000",
-    minutes: "00",
-    seconds: "00"
+    hours: '000',
+    minutes: '00',
+    seconds: '00',
   };
 
   componentDidMount() {
@@ -50,9 +50,9 @@ export default class RuntimePicker extends React.PureComponent {
     const seconds = (value % FROM_HOURS) % FROM_MINUTES;
 
     this.setState({
-      hours: `${hours}`.padStart(3, "0"),
-      minutes: `${minutes}`.padStart(2, "0"),
-      seconds: `${seconds}`.padStart(2, 0)
+      hours: `${hours}`.padStart(3, '0'),
+      minutes: `${minutes}`.padStart(2, '0'),
+      seconds: `${seconds}`.padStart(2, 0),
     });
   };
 
@@ -60,36 +60,36 @@ export default class RuntimePicker extends React.PureComponent {
     const { hours, minutes, seconds } = this.state;
     const { skipSeconds } = this.props;
 
-    const tail = skipSeconds ? "" : `:${seconds}`;
+    const tail = skipSeconds ? '' : `:${seconds}`;
 
     return `${hours}:${minutes}${tail}`;
   };
 
   chainOrTrim = (current, key, isBackspace) => {
-    if (isBackspace) return current.replace(backspaceExpresion, "");
+    if (isBackspace) return current.replace(backspaceExpresion, '');
     return `${current}${key}`;
   };
 
   // Handles component update based on control clicks
   handleChange = ({ currentTarget }) => {
     const { name, value } = currentTarget;
-    const isScoped = currentTarget.getAttribute("data-unscoped");
+    const isScoped = currentTarget.getAttribute('data-unscoped');
     const padLength = isScoped ? 3 : 2;
 
     this.setState(() => {
       const asInt = parseInt(value, 10);
 
-      if (isNaN(asInt)) return null;
+      if (Number.isNaN(asInt)) return null;
       if (asInt < LEDGE || (!isScoped && asInt > REDGE)) return null;
 
       return {
-        [name]: value.padStart(padLength, "0")
+        [name]: value.padStart(padLength, '0'),
       };
     });
   };
 
   // handles and sanitizes key presses
-  handleKeyboard = event => {
+  handleKeyboard = (event) => {
     event.persist();
     const { key, keyCode, currentTarget } = event;
     const isNumber = keyCode >= MIN_CODE && keyCode <= MAX_CODE;
@@ -98,21 +98,21 @@ export default class RuntimePicker extends React.PureComponent {
     if (!isNumber && !isBackspace) return false;
 
     const { name, value } = currentTarget;
-    const isScoped = currentTarget.getAttribute("data-unscoped");
+    const isScoped = currentTarget.getAttribute('data-unscoped');
     const padLength = isScoped ? 3 : 2;
 
     const relevantPart = this.chainOrTrim(value, key, isBackspace)
-      .replace(clearPadExpression, "");
+      .replace(clearPadExpression, '');
 
     const asInt = parseInt(relevantPart, 10);
 
-    if (isNaN(asInt)) return false;
+    if (Number.isNaN(asInt)) return false;
     if (asInt < LEDGE || (!isScoped && asInt > REDGE)) return false;
 
     event.preventDefault();
 
     return this.setState({
-      [name]: relevantPart.padStart(padLength, "0")
+      [name]: relevantPart.padStart(padLength, '0'),
     });
   };
 
@@ -156,7 +156,7 @@ export default class RuntimePicker extends React.PureComponent {
 
     return (
       <OverlayTrigger
-        trigger={"click"}
+        trigger="click"
         overlay={this.renderPicker()}
         placement="top"
         rootClose

@@ -5,13 +5,13 @@ const ScopedField = ({
   handleChange,
   handleKeyboard,
   name,
-  value
+  value,
 }) => {
   if (exclude) return null;
 
   return (
     <React.Fragment>
-      {" : "}
+      {' : '}
       <input
         dir="rtl"
         max={59}

@@ -1,0 +1,22 @@
+{
+  "parserOptions": {
+    "ecmaVersion": 6,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true
+    }
+  },
+
+  "extends": [
+    "airbnb",
+    "plugin:flowtype/recommended"
+  ],
+
+  "rules": {
+    "react/prop-types": ["off"]
+  },
+
+  "plugins": [
+    "flowtype"
+  ]
+}
