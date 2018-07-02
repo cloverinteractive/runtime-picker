@@ -22,6 +22,7 @@ type Props = {
   disabled: boolean,
   name: string,
   onChange: Function,
+  placeholder: string,
   placement: 'bottom' | 'left' | 'right' | 'top',
   skipSeconds: boolean,
   title: string,
@@ -45,6 +46,7 @@ export default class RuntimePicker extends React.PureComponent<Props, State> {
   static defaultProps = {
     disabled: false,
     name: 'runtime',
+    placeholder: 'HHH:MM:SS',
     placement: 'top',
     skipSeconds: false,
     title: 'Pick your Runtime',
@@ -155,6 +157,12 @@ export default class RuntimePicker extends React.PureComponent<Props, State> {
     });
   };
 
+  runtimeFace = () => {
+    const { value } = this.props;
+
+    return value ? this.runtimeDisplay() : '';
+  }
+
   renderPicker = () => {
     const { hours, minutes, seconds } = this.state;
     const { skipSeconds: exclude, title } = this.props;
@@ -192,7 +200,7 @@ export default class RuntimePicker extends React.PureComponent<Props, State> {
   };
 
   renderDisabled = () => {
-    const { name } = this.props;
+    const { name, placeholder } = this.props;
 
     return (
       <div className="disabled-runtimePicker">
@@ -200,15 +208,21 @@ export default class RuntimePicker extends React.PureComponent<Props, State> {
         <input
           disabled
           className="form-control"
+          placeholder={placeholder}
           type="text"
-          value={this.runtimeDisplay()}
+          value={this.runtimeFace()}
         />
       </div>
     );
   };
 
   render() {
-    const { disabled, name, placement } = this.props;
+    const {
+      disabled,
+      name,
+      placeholder,
+      placement,
+    } = this.props;
 
     if (disabled) return this.renderDisabled();
 
@@ -225,7 +239,8 @@ export default class RuntimePicker extends React.PureComponent<Props, State> {
             className="form-control"
             type="text"
             onChange={NOOP}
-            value={this.runtimeDisplay()}
+            placeholder={placeholder}
+            value={this.runtimeFace()}
           />
         </OverlayTrigger>
       </div>
