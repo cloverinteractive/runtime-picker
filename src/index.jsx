@@ -1,5 +1,5 @@
 // @flow
-/* eslint-disable jsx-a11y/no-autofocus */
+
 import React from 'react';
 import { OverlayTrigger, Popover } from 'react-bootstrap';
 import ScopedField from './ScopedField';
@@ -7,21 +7,26 @@ import inputStyle from './dont-blink';
 
 const LEDGE = 0; // min value accepted as unit
 const REDGE = 59; // max value accepted as unit
+const MIN_LENGTH = 7; // minimum number length to be zero-filled
 
 const FROM_HOURS = 3600; // hours to second multiplier
 const FROM_MINUTES = 60; // minute to second multiplier
 
 const BACKSPACE_CODE = 8;
+const DELETE_CODE = 46;
 const MIN_CODE = 48; // min code for numbers
 const MAX_CODE = 57; // max code for numbers
 
+const breakExpression = /^(\d+)(\d{2})(\d{2})$/; // Breaks runtime units
 const backspaceExpresion = /.$/; // Removes the last character
-const clearPadExpression = /^(0+)/; // Removes the zero padding
+const checkPadExpression = /^(0+)/; // Removes the zero padding
+const delimeterEpression = /:/g; // Match runtime delimeter
 
 type Props = {
   disabled: boolean,
   name: string,
   onChange: Function,
+  placeholder: string,
   placement: 'bottom' | 'left' | 'right' | 'top',
   skipSeconds: boolean,
   title: string,
@@ -45,6 +50,7 @@ export default class RuntimePicker extends React.PureComponent<Props, State> {
   static defaultProps = {
     disabled: false,
     name: 'runtime',
+    placeholder: 'HHH:MM:SS',
     placement: 'top',
     skipSeconds: false,
     title: 'Pick your Runtime',
@@ -72,7 +78,7 @@ export default class RuntimePicker extends React.PureComponent<Props, State> {
     }
   }
 
-  toSeconds = () => {
+  toSeconds = (): number => {
     const { hours, minutes, seconds } = this.state;
 
     const hoursInSeconds = parseInt(hours, 10) * FROM_HOURS;
@@ -81,22 +87,27 @@ export default class RuntimePicker extends React.PureComponent<Props, State> {
     return hoursInSeconds + minutesInSeconds + parseInt(seconds, 10);
   };
 
-  fromSeconds = () => {
+  // Persist or return the current runtime format from seconds in state or props
+  fromSeconds = (fromState: boolean = false, persist: boolean = true): State => {
     const { value } = this.props;
+    const amount = fromState ? this.toSeconds() : value;
 
-    const hours = Math.floor(value / FROM_HOURS);
-    const minutes = Math.floor(value / FROM_MINUTES) % FROM_MINUTES;
-    const seconds = (value % FROM_HOURS) % FROM_MINUTES;
+    const hours = Math.floor(amount / FROM_HOURS);
+    const minutes = Math.floor(amount / FROM_MINUTES) % FROM_MINUTES;
+    const seconds = (amount % FROM_HOURS) % FROM_MINUTES;
 
-    this.setState({
+    const runtime = {
       hours: `${hours}`.padStart(3, '0'),
       minutes: `${minutes}`.padStart(2, '0'),
       seconds: `${seconds}`.padStart(2, '0'),
-    });
+    };
+
+    if (persist) this.setState(runtime);
+    return runtime;
   };
 
-  runtimeDisplay = () => {
-    const { hours, minutes, seconds } = this.state;
+  runtimeDisplay = (parsed: boolean = true): string => {
+    const { hours, minutes, seconds } = parsed ? this.fromSeconds(true, false) : this.state;
     const { skipSeconds } = this.props;
 
     const tail = skipSeconds ? '' : `:${seconds}`;
@@ -105,21 +116,41 @@ export default class RuntimePicker extends React.PureComponent<Props, State> {
   };
 
   chainOrTrim = (current: string, key: string, isBackspace: boolean): string => {
+    const { skipSeconds } = this.props;
+    const attached = skipSeconds ? `${key}00` : key;
+
     if (isBackspace) return current.replace(backspaceExpresion, '');
-    return `${current}${key}`;
+    return `${current}${attached}`;
+  };
+
+  isUnscoped = (currentTarget: HTMLInputElement): boolean => Boolean(currentTarget.getAttribute('data-unscoped'));
+
+  isInvalid = (asInt: number, isUnscoped: boolean): boolean => Number.isNaN(asInt)
+    || (asInt < LEDGE || (!isUnscoped && asInt > REDGE));
+
+  // Pads and breaks runtime based on unit lengths HHHMMSS
+  brokenAndPadded = (value: string): Array<string> => value.padStart(MIN_LENGTH, '0').match(breakExpression)
+      || [value, '000', '00', '00'];
+
+  clearState = () => {
+    const [, hours, minutes, seconds] = this.brokenAndPadded('0');
+
+    this.setState({
+      hours,
+      minutes,
+      seconds,
+    });
   };
 
   // Handles component update based on control clicks
   handleChange = ({ currentTarget }: SyntheticEvent<HTMLInputElement>) => {
     const { name, value } = currentTarget;
-    const isUnscoped = currentTarget.getAttribute('data-unscoped');
+    const isUnscoped = this.isUnscoped(currentTarget);
     const padLength = isUnscoped ? 3 : 2;
+    const asInt = parseInt(value, 10);
 
     this.setState(() => {
-      const asInt = parseInt(value, 10);
-
-      if (Number.isNaN(asInt)) return null;
-      if (asInt < LEDGE || (!isUnscoped && asInt > REDGE)) return null;
+      if (this.isInvalid(asInt, isUnscoped)) return null;
 
       return {
         [name]: value.padStart(padLength, '0'),
@@ -130,29 +161,36 @@ export default class RuntimePicker extends React.PureComponent<Props, State> {
   // handles and sanitizes key presses
   handleKeyboard = (event: SyntheticKeyboardEvent<HTMLInputElement>) => {
     event.persist();
-    const { key, keyCode, currentTarget } = event;
-    const isNumber = keyCode >= MIN_CODE && keyCode <= MAX_CODE;
+
+    const { key, keyCode } = event;
     const isBackspace = keyCode === BACKSPACE_CODE;
+    const isNumber = keyCode >= MIN_CODE && keyCode <= MAX_CODE;
+    const isDelete = keyCode === DELETE_CODE;
 
+    if (isDelete) this.clearState();
     if (!isNumber && !isBackspace) return false;
-
-    const { name, value } = currentTarget;
-    const isUnscoped = currentTarget.getAttribute('data-unscoped');
-    const padLength = isUnscoped ? 3 : 2;
-
-    const relevantPart = this.chainOrTrim(value, key, isBackspace)
-      .replace(clearPadExpression, '');
-
-    const asInt = parseInt(relevantPart, 10);
-
-    if (Number.isNaN(asInt)) return false;
-    if (asInt < LEDGE || (!isUnscoped && asInt > REDGE)) return false;
 
     event.preventDefault();
 
+    const value = this.runtimeDisplay(false)
+      .replace(delimeterEpression, '');
+
+    const relevantPart = this.chainOrTrim(value, key, isBackspace)
+      .replace(checkPadExpression, '');
+
+    const [, hours, minutes, seconds] = this.brokenAndPadded(relevantPart);
+
     return this.setState({
-      [name]: relevantPart.padStart(padLength, '0'),
+      hours,
+      minutes,
+      seconds,
     });
+  };
+
+  runtimeFace = () => {
+    const { value } = this.props;
+
+    return value ? this.runtimeDisplay() : '';
   };
 
   renderPicker = () => {
@@ -162,7 +200,6 @@ export default class RuntimePicker extends React.PureComponent<Props, State> {
     return (
       <Popover id="runtime-picker-top" title={title}>
         <input
-          autoFocus
           data-unscoped
           dir="rtl"
           min={0}
@@ -192,7 +229,7 @@ export default class RuntimePicker extends React.PureComponent<Props, State> {
   };
 
   renderDisabled = () => {
-    const { name } = this.props;
+    const { name, placeholder } = this.props;
 
     return (
       <div className="disabled-runtimePicker">
@@ -200,15 +237,21 @@ export default class RuntimePicker extends React.PureComponent<Props, State> {
         <input
           disabled
           className="form-control"
+          placeholder={placeholder}
           type="text"
-          value={this.runtimeDisplay()}
+          value={this.runtimeFace()}
         />
       </div>
     );
   };
 
   render() {
-    const { disabled, name, placement } = this.props;
+    const {
+      disabled,
+      name,
+      placeholder,
+      placement,
+    } = this.props;
 
     if (disabled) return this.renderDisabled();
 
@@ -225,7 +268,8 @@ export default class RuntimePicker extends React.PureComponent<Props, State> {
             className="form-control"
             type="text"
             onChange={NOOP}
-            value={this.runtimeDisplay()}
+            placeholder={placeholder}
+            value={this.runtimeFace()}
           />
         </OverlayTrigger>
       </div>

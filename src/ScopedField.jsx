@@ -1,4 +1,5 @@
 // @flow
+/* eslint-disable jsx-a11y/no-autofocus */
 
 import React from 'react';
 import inputStyle from './dont-blink';
@@ -15,6 +16,11 @@ const defaultProps = {
   exclude: false,
 };
 
+const scopedStyle = {
+  ...inputStyle,
+  maxWidth: '3em',
+};
+
 const ScopedField = ({
   exclude,
   handleChange,
@@ -28,14 +34,14 @@ const ScopedField = ({
     <React.Fragment>
       {' : '}
       <input
+        autoFocus={!exclude}
         dir="rtl"
-        max={59}
         min={0}
         name={name}
         onChange={handleChange}
         onKeyDown={handleKeyboard}
         step={1}
-        style={inputStyle}
+        style={scopedStyle}
         type="number"
         value={value}
       />

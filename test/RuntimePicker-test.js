@@ -17,11 +17,12 @@ describe('<RuntimePicker />', () => {
       expect(overlay.length).to.eql(1);
     });
 
-    it('display runtime in default input', () => {
+    it('display placeholder if runtime is 0', () => {
       const overlay = wrapper.find(OverlayTrigger);
       const input = overlay.find('.form-control');
 
-      expect(input.props().value).to.eql('000:00:00');
+      expect(input.props().placeholder).to.eql('HHH:MM:SS');
+      expect(input.props().value).to.eql('');
     });
 
     it('saves runtime in seconds in hidden input', () => {
@@ -40,7 +41,7 @@ describe('<RuntimePicker />', () => {
 
       expect(input.length).to.eql(1);
       expect(input.props().disabled).to.eql(true);
-      expect(input.props().value).to.eql('000:00:00');
+      expect(input.props().value).to.eql('');
     });
 
     it('does not render and overlay', () => {
