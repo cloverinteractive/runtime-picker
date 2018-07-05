@@ -1,6 +1,6 @@
 {
   "name": "runtime-picker",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Pick a runtime like you would microwave popcorn",
   "main": "build/index.js",
   "scripts": {
