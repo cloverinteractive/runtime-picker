@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import { mount } from 'enzyme';
 import RuntimePicker from 'index';
 import { OverlayTrigger } from 'react-bootstrap';
+import Picker from 'Picker';
 
 describe('<RuntimePicker />', () => {
   context('default behavior', () => {
@@ -13,15 +14,22 @@ describe('<RuntimePicker />', () => {
     });
 
     it('has an overlay', () => {
-      const overlay = wrapper.find(OverlayTrigger);
-      expect(overlay.length).to.eql(1);
+      const trigger = wrapper.find(OverlayTrigger);
+      expect(trigger.length).to.eql(1);
+    });
+
+    it('has a Picker', () => {
+      const trigger = wrapper.find(OverlayTrigger);
+      const overlay = trigger.props().overlay;
+
+      expect(overlay.type).to.eql(Picker);
     });
 
     it('display placeholder if runtime is 0', () => {
       const overlay = wrapper.find(OverlayTrigger);
       const input = overlay.find('.form-control');
 
-      expect(input.props().placeholder).to.eql('HHH:MM:SS');
+      expect(input.props().placeholder).to.eql('HHHH:MM:SS');
       expect(input.props().value).to.eql('');
     });
 
@@ -65,7 +73,7 @@ describe('<RuntimePicker />', () => {
       const overlay = wrapper.find(OverlayTrigger);
       const input = overlay.find('.form-control');
 
-      expect(input.props().value).to.eql('000:23:52');
+      expect(input.props().value).to.eql('0000:23:52');
     });
 
     it('saves the runtime in seconds in hidden input', () => {
@@ -83,7 +91,7 @@ describe('<RuntimePicker />', () => {
       const overlay = wrapper.find(OverlayTrigger);
       const runtime = overlay.find('.form-control');
 
-      expect(runtime.props().value).to.eql('000:23');
+      expect(runtime.props().value).to.eql('0000:23');
       expect(hidden.props().value).to.eql(1432);
     });
   });
