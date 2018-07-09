@@ -5,6 +5,8 @@ import RuntimePicker from 'index';
 import { OverlayTrigger } from 'react-bootstrap';
 import Picker from 'Picker';
 
+const NOOP = f => f;
+
 describe('<RuntimePicker />', () => {
   context('default behavior', () => {
     const wrapper = mount(<RuntimePicker />);
@@ -93,6 +95,61 @@ describe('<RuntimePicker />', () => {
 
       expect(runtime.props().value).to.eql('0000:23');
       expect(hidden.props().value).to.eql(1432);
+    });
+  });
+
+  describe('callbacks', () => {
+    context('change handler', () => {
+      const wrapper = mount(<RuntimePicker />);
+      const changeHandler = wrapper.instance().handleChange;
+      const displayHandler = wrapper.instance().runtimeDisplay;
+
+      const mockEvent = {
+        currentTarget: {
+          getAttribute: f => false,
+          name: 'minutes',
+          value: '1',
+        },
+      };
+
+      it('changes input via clicks', () => {
+        expect(displayHandler()).to.eql('0000:00:00');
+        changeHandler(mockEvent);
+        expect(displayHandler()).to.eql('0000:01:00');
+      });
+    });
+
+    context('keyboard handler', () => {
+      const wrapper = mount(<RuntimePicker value={1432}/>);
+      const keyboardHandler = wrapper.instance().handleKeyboard;
+      const displayHandler = wrapper.instance().runtimeDisplay;
+
+      const mockEvent = {
+        key: '1',
+        keyCode: 48,
+        persist: NOOP,
+        preventDefault: NOOP,
+      };
+
+      it('pushes numbers from right to left', () => {
+        expect(displayHandler()).to.eql('0000:23:52');
+        keyboardHandler(mockEvent);
+        expect(displayHandler()).to.eql('0002:35:21');
+      });
+
+      context('maxHours', () => {
+        const wrapper = mount(<RuntimePicker value={36002439} />);
+        const keyboardHandler = wrapper.instance().handleKeyboard;
+        const displayHandler = wrapper.instance().runtimeDisplay;
+
+        it('will not let you go over the maximum number of hours', () => {
+          const maxTime = '10000:40:39'; // This is what 9999:99:99 translates to
+
+          expect(displayHandler()).to.eql(maxTime);
+          keyboardHandler(mockEvent);
+          expect(displayHandler()).to.eql(maxTime)
+        });
+      });
     });
   });
 });
