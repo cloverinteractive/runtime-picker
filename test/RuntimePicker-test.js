@@ -1,6 +1,7 @@
 import React from 'react';
-import { expect } from 'chai';
+import { assert, expect } from 'chai';
 import { mount } from 'enzyme';
+import sinon from 'sinon';
 import RuntimePicker from 'index';
 import { OverlayTrigger } from 'react-bootstrap';
 import Picker from 'Picker';
@@ -123,6 +124,7 @@ describe('<RuntimePicker />', () => {
       const wrapper = mount(<RuntimePicker value={1432}/>);
       const keyboardHandler = wrapper.instance().handleKeyboard;
       const displayHandler = wrapper.instance().runtimeDisplay;
+      const formattedValue = '0000:23:52';
 
       const mockEvent = {
         key: '1',
@@ -132,9 +134,27 @@ describe('<RuntimePicker />', () => {
       };
 
       it('pushes numbers from right to left', () => {
-        expect(displayHandler()).to.eql('0000:23:52');
+        expect(displayHandler()).to.eql(formattedValue);
         keyboardHandler(mockEvent);
         expect(displayHandler()).to.eql('0002:35:21');
+      });
+
+      context('hitting Delete', () => {
+        const wrapper = mount(<RuntimePicker value={1432}/>);
+        const keyboardHandler = wrapper.instance().handleKeyboard;
+        const displayHandler = wrapper.instance().runtimeDisplay;
+
+        const mockEvent = {
+          key: 'Delete',
+          keyCode: 46,
+          persist: NOOP,
+        };
+
+        it('Clears when user hits Delete', () => {
+          expect(displayHandler()).to.eql(formattedValue);
+          keyboardHandler(mockEvent);
+          expect(displayHandler()).to.eql('0000:00:00');
+        });
       });
 
       context('maxHours', () => {
@@ -149,6 +169,59 @@ describe('<RuntimePicker />', () => {
           keyboardHandler(mockEvent);
           expect(displayHandler()).to.eql(maxTime)
         });
+      });
+    });
+  });
+
+  context('onChange', () => {
+    const onChange = sinon.spy();
+    const initialValue = 1432;
+    const formattedValue = '0000:23:52';
+
+    context('change events', () => {
+      const wrapper = mount(<RuntimePicker onChange={onChange} value={initialValue} />);
+      const changeHandler = wrapper.instance().handleChange;
+      const displayHandler = wrapper.instance().runtimeDisplay;
+      const toSeconds = wrapper.instance().toSeconds;
+      const mockEvent = {
+        currentTarget: {
+          getAttribute: f => false,
+          name: 'minutes',
+          value: '24',
+        },
+      };
+
+      const runtimePlusOneMinute = initialValue + 60;
+
+      it('sends runtime in seconds to onChange callback', () => {
+        expect(toSeconds()).to.eql(initialValue);
+        expect(displayHandler()).to.eql(formattedValue);
+        changeHandler(mockEvent);
+        expect(toSeconds()).to.eql(runtimePlusOneMinute);
+        assert(onChange.calledWith(runtimePlusOneMinute));
+      });
+    });
+
+    context('keyboard events', () => {
+      const wrapper = mount(<RuntimePicker onChange={onChange} value={initialValue} />);
+      const keyboardHandler = wrapper.instance().handleKeyboard;
+      const displayHandler = wrapper.instance().runtimeDisplay;
+      const toSeconds = wrapper.instance().toSeconds;
+      const unitsShiftInSeconds = 9321;
+
+      const mockEvent = {
+        key: '1',
+        keyCode: 48,
+        persist: NOOP,
+        preventDefault: NOOP,
+      };
+
+      it('sends runtime in seconds to onChange callback', () => {
+        expect(toSeconds()).to.eql(initialValue);
+        expect(displayHandler()).to.eql(formattedValue);
+        keyboardHandler(mockEvent);
+        expect(toSeconds()).to.eql(unitsShiftInSeconds);
+        expect(onChange.calledWith(unitsShiftInSeconds));
       });
     });
   });
