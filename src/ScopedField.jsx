@@ -3,11 +3,12 @@
 
 import React from 'react';
 import inputStyle from './dont-blink';
+import type { changeHandler, keyboardHandler } from './types';
 
 type Props = {
   exclude: boolean,
-  handleChange: Function,
-  handleKeyboard: Function,
+  handleChange: changeHandler,
+  handleKeyboard: keyboardHandler,
   name: string,
   value: string,
 };

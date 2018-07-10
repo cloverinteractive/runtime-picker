@@ -1,10 +1,12 @@
 {
   "name": "runtime-picker",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Pick a runtime like you would microwave popcorn",
   "main": "build/index.js",
   "scripts": {
-    "test": "cross-env NODE_PATH=./src yarn mocha --opts .mocha.opts",
+    "test": "cross-env NODE_PATH=./src yarn mocha --opts .mocha.opts --recursive test",
+    "test:coverage": "yarn nyc --extension=.jsx --exclude=test/ yarn test",
+    "coverage": "yarn nyc --extension=.jsx --exclude=test/ report --reporter=text-lcov | yarn coveralls",
     "lint": "yarn eslint --ext .js --ext .jsx ./src",
     "start": "webpack --watch",
     "build": "webpack"
@@ -60,6 +62,7 @@
   },
   "dependencies": {
     "add": "^2.0.6",
+    "coveralls": "^3.0.2",
     "global": "^4.3.2"
   },
   "engines": {

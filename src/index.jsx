@@ -1,13 +1,14 @@
 // @flow
 
 import React from 'react';
-import { OverlayTrigger, Popover } from 'react-bootstrap';
-import ScopedField from './ScopedField';
-import inputStyle from './dont-blink';
+import { OverlayTrigger } from 'react-bootstrap';
+import Picker from './Picker';
+
+const RADIX = 10;
 
 const LEDGE = 0; // min value accepted as unit
 const REDGE = 59; // max value accepted as unit
-const MIN_LENGTH = 7; // minimum number length to be zero-filled
+const MIN_LENGTH = 8; // minimum number length to be zero-filled
 
 const FROM_HOURS = 3600; // hours to second multiplier
 const FROM_MINUTES = 60; // minute to second multiplier
@@ -24,6 +25,7 @@ const delimeterEpression = /:/g; // Match runtime delimeter
 
 type Props = {
   disabled: boolean,
+  maxHours: number,
   name: string,
   onChange: Function,
   placeholder: string,
@@ -41,16 +43,12 @@ type State = {
 
 const NOOP = f => f;
 
-const boundedWidth = {
-  ...inputStyle,
-  maxWidth: '4em',
-};
-
 export default class RuntimePicker extends React.PureComponent<Props, State> {
   static defaultProps = {
     disabled: false,
+    maxHours: 9999,
     name: 'runtime',
-    placeholder: 'HHH:MM:SS',
+    placeholder: 'HHHH:MM:SS',
     placement: 'top',
     skipSeconds: false,
     title: 'Pick your Runtime',
@@ -58,7 +56,7 @@ export default class RuntimePicker extends React.PureComponent<Props, State> {
   };
 
   state = {
-    hours: '000',
+    hours: '0000',
     minutes: '00',
     seconds: '00',
   };
@@ -81,10 +79,10 @@ export default class RuntimePicker extends React.PureComponent<Props, State> {
   toSeconds = (): number => {
     const { hours, minutes, seconds } = this.state;
 
-    const hoursInSeconds = parseInt(hours, 10) * FROM_HOURS;
-    const minutesInSeconds = parseInt(minutes, 10) * FROM_MINUTES;
+    const hoursInSeconds = parseInt(hours, RADIX) * FROM_HOURS;
+    const minutesInSeconds = parseInt(minutes, RADIX) * FROM_MINUTES;
 
-    return hoursInSeconds + minutesInSeconds + parseInt(seconds, 10);
+    return hoursInSeconds + minutesInSeconds + parseInt(seconds, RADIX);
   };
 
   // Persist or return the current runtime format from seconds in state or props
@@ -97,7 +95,7 @@ export default class RuntimePicker extends React.PureComponent<Props, State> {
     const seconds = (amount % FROM_HOURS) % FROM_MINUTES;
 
     const runtime = {
-      hours: `${hours}`.padStart(3, '0'),
+      hours: `${hours}`.padStart(4, '0'),
       minutes: `${minutes}`.padStart(2, '0'),
       seconds: `${seconds}`.padStart(2, '0'),
     };
@@ -130,7 +128,7 @@ export default class RuntimePicker extends React.PureComponent<Props, State> {
 
   // Pads and breaks runtime based on unit lengths HHHMMSS
   brokenAndPadded = (value: string): Array<string> => value.padStart(MIN_LENGTH, '0').match(breakExpression)
-      || [value, '000', '00', '00'];
+      || [value, '0000', '00', '00'];
 
   clearState = () => {
     const [, hours, minutes, seconds] = this.brokenAndPadded('0');
@@ -146,8 +144,8 @@ export default class RuntimePicker extends React.PureComponent<Props, State> {
   handleChange = ({ currentTarget }: SyntheticEvent<HTMLInputElement>) => {
     const { name, value } = currentTarget;
     const isUnscoped = this.isUnscoped(currentTarget);
-    const padLength = isUnscoped ? 3 : 2;
-    const asInt = parseInt(value, 10);
+    const padLength = isUnscoped ? 4 : 2;
+    const asInt = parseInt(value, RADIX);
 
     this.setState(() => {
       if (this.isInvalid(asInt, isUnscoped)) return null;
@@ -163,9 +161,10 @@ export default class RuntimePicker extends React.PureComponent<Props, State> {
     event.persist();
 
     const { key, keyCode } = event;
+    const { maxHours } = this.props;
     const isBackspace = keyCode === BACKSPACE_CODE;
-    const isNumber = keyCode >= MIN_CODE && keyCode <= MAX_CODE;
     const isDelete = keyCode === DELETE_CODE;
+    const isNumber = keyCode >= MIN_CODE && keyCode <= MAX_CODE;
 
     if (isDelete) this.clearState();
     if (!isNumber && !isBackspace) return false;
@@ -180,6 +179,8 @@ export default class RuntimePicker extends React.PureComponent<Props, State> {
 
     const [, hours, minutes, seconds] = this.brokenAndPadded(relevantPart);
 
+    if (parseInt(hours, RADIX) > maxHours) return false;
+
     return this.setState({
       hours,
       minutes,
@@ -187,46 +188,8 @@ export default class RuntimePicker extends React.PureComponent<Props, State> {
     });
   };
 
-  runtimeFace = () => {
-    const { value } = this.props;
-
-    return value ? this.runtimeDisplay() : '';
-  };
-
-  renderPicker = () => {
-    const { hours, minutes, seconds } = this.state;
-    const { skipSeconds: exclude, title } = this.props;
-
-    return (
-      <Popover id="runtime-picker-top" title={title}>
-        <input
-          data-unscoped
-          dir="rtl"
-          min={0}
-          name="hours"
-          onChange={this.handleChange}
-          onKeyDown={this.handleKeyboard}
-          step={1}
-          style={boundedWidth}
-          type="number"
-          value={hours}
-        />
-        <ScopedField
-          handleChange={this.handleChange}
-          handleKeyboard={this.handleKeyboard}
-          name="minutes"
-          value={minutes}
-        />
-        <ScopedField
-          exclude={exclude}
-          handleChange={this.handleChange}
-          handleKeyboard={this.handleKeyboard}
-          name="seconds"
-          value={seconds}
-        />
-      </Popover>
-    );
-  };
+  runtimeFace = () => (this.toSeconds() && this.runtimeDisplay())
+    || '';
 
   renderDisabled = () => {
     const { name, placeholder } = this.props;
@@ -248,10 +211,15 @@ export default class RuntimePicker extends React.PureComponent<Props, State> {
   render() {
     const {
       disabled,
+      maxHours,
       name,
       placeholder,
       placement,
+      skipSeconds,
+      title,
     } = this.props;
+
+    const { hours, minutes, seconds } = this.state;
 
     if (disabled) return this.renderDisabled();
 
@@ -260,7 +228,18 @@ export default class RuntimePicker extends React.PureComponent<Props, State> {
         <input id={name} name={name} type="hidden" value={this.toSeconds()} />
         <OverlayTrigger
           trigger="click"
-          overlay={this.renderPicker()}
+          overlay={(
+            <Picker
+              handleChange={this.handleChange}
+              handleKeyboard={this.handleKeyboard}
+              hours={hours}
+              maxHours={maxHours}
+              minutes={minutes}
+              seconds={seconds}
+              skipSeconds={skipSeconds}
+              title={title}
+            />
+)}
           placement={placement}
           rootClose
         >
