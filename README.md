@@ -1,5 +1,5 @@
 [ ![Codeship Status for cloverinteractive/runtime-picker](https://app.codeship.com/projects/96305c50-5e62-0136-f3f4-6e975dd0f2b8/status?branch=master)](https://app.codeship.com/projects/296056)
-[![Coverage Status](https://coveralls.io/repos/github/cloverinteractive/runtime-picker/badge.svg?branch=features%2Fmax-hours)](https://coveralls.io/github/cloverinteractive/runtime-picker?branch=features%2Fmax-hours)
+[![Coverage Status](https://coveralls.io/repos/github/cloverinteractive/runtime-picker/badge.svg?branch=master)](https://coveralls.io/github/cloverinteractive/runtime-picker?branch=master)
 
 Runtime-Picker
 ==============
