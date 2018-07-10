@@ -28,9 +28,10 @@ const Picker = ({
   seconds,
   skipSeconds: exclude,
   title,
+  ...bootstrapProps
 }: Props) => (
 
-  <Popover id="runtime-picker-top" title={title}>
+  <Popover id="runtime-picker-top" title={title} {...bootstrapProps}>
     <input
       data-unscoped
       dir="rtl"
