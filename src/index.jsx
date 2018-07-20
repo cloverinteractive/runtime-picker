@@ -15,8 +15,6 @@ const FROM_MINUTES = 60; // minute to second multiplier
 
 const BACKSPACE_CODE = 8;
 const DELETE_CODE = 46;
-const MIN_CODE = 48; // min code for numbers
-const MAX_CODE = 57; // max code for numbers
 
 const breakExpression = /^(\d+)(\d{2})(\d{2})$/; // Breaks runtime units
 const backspaceExpresion = /.$/; // Removes the last character
@@ -164,7 +162,7 @@ export default class RuntimePicker extends React.PureComponent<Props, State> {
     const { maxHours } = this.props;
     const isBackspace = keyCode === BACKSPACE_CODE;
     const isDelete = keyCode === DELETE_CODE;
-    const isNumber = keyCode >= MIN_CODE && keyCode <= MAX_CODE;
+    const isNumber = parseInt(key, RADIX);
 
     if (isDelete) this.clearState();
     if (!isNumber && !isBackspace) return false;
