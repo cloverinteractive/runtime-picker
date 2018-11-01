@@ -1,6 +1,6 @@
 {
   "name": "runtime-picker",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Pick a runtime like you would microwave popcorn",
   "main": "build/index.js",
   "scripts": {
@@ -63,8 +63,8 @@
   },
   "dependencies": {},
   "engines": {
-    "node": "10.1.0",
-    "npm": "6.0.1",
-    "yarn": "1.6.0"
+    "node": "10.*.*",
+    "npm": "6.*.*",
+    "yarn": "1.*.*"
   }
 }
